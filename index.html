@@ -54,24 +54,29 @@
                 return;
             }
 
-            // 半角カタカナを全角に、全角英字を半角にし、大文字を小文字化して、空白をすべて消す
-            // これにより「ﾕﾏﾝ」は「ユマン」として扱われます
-            const normalizedName = name.normalize("NFKC").toLowerCase().replace(/[\s　]+/g, "");
+            // 1. 全角半角統一と小文字化
+            let cleanName = name.normalize("NFKC").toLowerCase();
 
-            // 網羅するキーワードのリスト
-            const targetWords = [
-                "yuman", "yuuman", "yuhman", // ローマ字ゆまん
-                "ito", "itou", "itoh",       // ローマ字いとう
-                "いとう", "イトウ",            // いとう系
-                "ゆまん", "ユマン",            // ゆまん系
-                "ゆーまん", "ユーマン",        // ゆーまん系
-                "伊藤"                       // 漢字
-            ];
+            // 2. 妨害工作の徹底破壊
+            // \p{P}: 句読点やカッコなどの記号  \p{S}: 数学記号や絵文字など  \p{Z}: あらゆる空白
+            // \u200B-\u200D\uFEFF: 目に見えないゼロ幅文字
+            // ー〜~-\_: 長音符やハイフン、アンダースコア
+            // これらをすべて「無（カラ）」に置換して消し去る
+            cleanName = cleanName.replace(/[\p{P}\p{S}\p{Z}\u200B-\u200D\uFEFFー〜~\-＿_]/gu, "");
 
-            // normalizedNameの中に、targetWordsのどれか1つでも含まれているか判定
-            const isMatch = targetWords.some(word => normalizedName.includes(word));
+            // 3. 抜け道を許さない最凶の正規表現パターン
+            
+            // YUMAN系統（y, ゆ系 + u系(省略可) + m, ま系 + a系(省略可) + n, ん, ン, ソ）
+            const yumanPattern = /[yｙゆユゅュ][uｕうウぅゥ]?[mｍまマ][aａあアぁァ]?[nｎんンソ]/;
 
-            if (isMatch) {
+            // ITOU系統（i, い, 1, l系 + t, と, 卜(漢字)系 + o, u, 0, お, う系(省略可) + h(省略可)）
+            const itoPattern = /[iｉいイぃィ1lｌ][tｔとト卜][oｏuｕ0うウぅゥおオぉォ]?h?/;
+
+            // 漢字系統（伊藤だけでなく、念のため伊東も追加）
+            const kanjiPattern = /伊[藤東]/;
+
+            // どれか1つでも引っかかればアウト
+            if (yumanPattern.test(cleanName) || itoPattern.test(cleanName) || kanjiPattern.test(cleanName)) {
                 resultDiv.textContent = "ロリコン";
                 resultDiv.className = "lolicon";
             } else {
