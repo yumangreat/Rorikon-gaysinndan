@@ -56,15 +56,18 @@
                 return;
             }
 
+            // 全角半角を統一(NFKC)し、英字をすべて小文字に変換する
+            const normalizedName = name.normalize("NFKC").toLowerCase();
+
             // 指定されたキーワードが含まれているか判定
-            if (name.includes("yuman") || 
-                name.includes("いとう") || 
-                name.includes("イトウ") ||  
-                name.includes("ユマン") ||  
-                name.includes("ユーマン") ||  
-                name.includes("ゆまん") ||  
-                name.includes("ゆーまん") || 
-                name.includes("伊藤")) {
+            if (normalizedName.includes("yuman") || 
+                normalizedName.includes("いとう") || 
+                normalizedName.includes("イトウ") ||  
+                normalizedName.includes("ユマン") ||  
+                normalizedName.includes("ユーマン") ||  
+                normalizedName.includes("ゆまん") ||  
+                normalizedName.includes("ゆーまん") || 
+                normalizedName.includes("伊藤")) {
                 
                 resultDiv.textContent = "ロリコン";
                 resultDiv.className = "lolicon";
