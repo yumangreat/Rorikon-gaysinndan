@@ -56,17 +56,22 @@
                 return;
             }
 
-            // 全角半角を統一(NFKC)し、英字をすべて小文字に変換する
-            const normalizedName = name.normalize("NFKC").toLowerCase();
+            // 1. 全角半角統一(NFKC) ＋ 英字を小文字化 ＋ 余計なスペース(空白)を削除
+            let normalizedName = name.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
 
-            // 指定されたキーワードが含まれているか判定
+            // 2. カタカナ(半角カタカナもNFKCで全角になっている)を、すべて「ひらがな」に変換
+            // これにより「いトウ」「ｲﾄｳ」はすべて「いとう」に、「ユマん」は「ゆまん」になります
+            normalizedName = normalizedName.replace(/[\u30a1-\u30f6]/g, function(match) {
+                return String.fromCharCode(match.charCodeAt(0) - 0x60);
+            });
+
+            // 3. 徹底的に統一された文字列でキーワード判定
             if (normalizedName.includes("yuman") || 
-                normalizedName.includes("いとう") || 
-                normalizedName.includes("イトウ") ||  
-                normalizedName.includes("ユマン") ||  
-                normalizedName.includes("ユーマン") ||  
-                normalizedName.includes("ゆまん") ||  
-                normalizedName.includes("ゆーまん") || 
+                normalizedName.includes("yuuman") || // ローマ字 (ユーマン)
+                normalizedName.includes("ito") ||    // ローマ字 (ito, itou, itohすべてに反応します)
+                normalizedName.includes("いとう") ||   // ひらがな (イトウ、ｲﾄｳ、いトウもこれに反応します)
+                normalizedName.includes("ゆまん") ||   // ひらがな (ユマン、ﾕﾏﾝ、ゆマんもこれに反応します)
+                normalizedName.includes("ゆーまん") || // ひらがな長音
                 normalizedName.includes("伊藤")) {
                 
                 resultDiv.textContent = "ロリコン";
