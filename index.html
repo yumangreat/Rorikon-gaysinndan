@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>名前判定ツール</title>
+    <!-- キャッシュを強制的に無効化するメタタグを追加 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>名前判定ツール (キャッシュ対策版)</title>
     <style>
         body {
             font-family: sans-serif;
@@ -54,24 +58,14 @@
                 return;
             }
 
-            // 1. 小文字化（変換エラーを防ぐため、シンプルな処理に留める）
             let cleanName = name.toLowerCase();
-
-            // 2. ノイズ文字の削除（空白、長音符、アンダースコア、ドットなどを消し去る）
             cleanName = cleanName.replace(/[\s　\u200B-\u200D\uFEFFー〜~\-＿_.,!?！？・]/g, "");
 
-            // 3. 変換に頼らず、全角・半角どちらが来ても絶対に捕まえる正規表現
-
-            // YUMAN系統（ﾕﾏｿなどの半角カタカナも直接指定）
+            // ﾕﾏｿ (半角ゆまそ) も確実に捕まえるパターン
             const yumanPattern = /[yｙゆユゅュﾕ][uｕうウぅゥｳ]?[mｍまマﾏ][aａあアぁァｧ]?[nｎんンソﾝｿ]/;
-
-            // ITOU系統（ローマ字や、いとう等のひらがなカタカナ。伊東は除外）
             const itoPattern = /[iｉいイぃィ1lｌｲ][tｔとト卜ﾄ][oｏuｕ0うウぅゥおオぉォｳｵ]?h?/;
-
-            // 伊藤の漢字系統（イ尹、ｲ尹、亻尹 などの視覚トリック偽装を網羅）
             const kanjiPattern = /(伊|イ尹|ｲ尹|亻尹)藤/;
 
-            // どれか1つでも引っかかればロリコン判定
             if (yumanPattern.test(cleanName) || itoPattern.test(cleanName) || kanjiPattern.test(cleanName)) {
                 resultDiv.textContent = "ロリコン";
                 resultDiv.className = "lolicon";
