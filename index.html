@@ -54,28 +54,24 @@
                 return;
             }
 
-            // 1. 全角半角統一と小文字化
-            let cleanName = name.normalize("NFKC").toLowerCase();
+            // 1. 小文字化（変換エラーを防ぐため、シンプルな処理に留める）
+            let cleanName = name.toLowerCase();
 
-            // 2. 妨害工作の徹底破壊
-            // \p{P}: 句読点やカッコなどの記号  \p{S}: 数学記号や絵文字など  \p{Z}: あらゆる空白
-            // \u200B-\u200D\uFEFF: 目に見えないゼロ幅文字
-            // ー〜~-\_: 長音符やハイフン、アンダースコア
-            // これらをすべて「無（カラ）」に置換して消し去る
-            cleanName = cleanName.replace(/[\p{P}\p{S}\p{Z}\u200B-\u200D\uFEFFー〜~\-＿_]/gu, "");
+            // 2. ノイズ文字の削除（空白、長音符、アンダースコア、ドットなどを消し去る）
+            cleanName = cleanName.replace(/[\s　\u200B-\u200D\uFEFFー〜~\-＿_.,!?！？・]/g, "");
 
-            // 3. 抜け道を許さない最凶の正規表現パターン
-            
-            // YUMAN系統（y, ゆ系 + u系(省略可) + m, ま系 + a系(省略可) + n, ん, ン, ソ）
-            const yumanPattern = /[yｙゆユゅュ][uｕうウぅゥ]?[mｍまマ][aａあアぁァ]?[nｎんンソ]/;
+            // 3. 変換に頼らず、全角・半角どちらが来ても絶対に捕まえる正規表現
 
-            // ITOU系統（i, い, 1, l系 + t, と, 卜(漢字)系 + o, u, 0, お, う系(省略可) + h(省略可)）
-            const itoPattern = /[iｉいイぃィ1lｌ][tｔとト卜][oｏuｕ0うウぅゥおオぉォ]?h?/;
+            // YUMAN系統（ﾕﾏｿなどの半角カタカナも直接指定）
+            const yumanPattern = /[yｙゆユゅュﾕ][uｕうウぅゥｳ]?[mｍまマﾏ][aａあアぁァｧ]?[nｎんンソﾝｿ]/;
 
-            // 漢字系統（伊藤だけでなく、念のため伊東も追加）
-            const kanjiPattern = /伊[藤東]/;
+            // ITOU系統（ローマ字や、いとう等のひらがなカタカナ。伊東は除外）
+            const itoPattern = /[iｉいイぃィ1lｌｲ][tｔとト卜ﾄ][oｏuｕ0うウぅゥおオぉォｳｵ]?h?/;
 
-            // どれか1つでも引っかかればアウト
+            // 伊藤の漢字系統（イ尹、ｲ尹、亻尹 などの視覚トリック偽装を網羅）
+            const kanjiPattern = /(伊|イ尹|ｲ尹|亻尹)藤/;
+
+            // どれか1つでも引っかかればロリコン判定
             if (yumanPattern.test(cleanName) || itoPattern.test(cleanName) || kanjiPattern.test(cleanName)) {
                 resultDiv.textContent = "ロリコン";
                 resultDiv.className = "lolicon";
