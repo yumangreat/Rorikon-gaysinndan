@@ -27,10 +27,10 @@
             font-weight: bold;
         }
         .lolicon {
-            color: #e74c3c; /* 赤系 */
+            color: #e74c3c;
         }
         .gay {
-            color: #3498db; /* 青系 */
+            color: #3498db;
         }
     </style>
 </head>
@@ -45,43 +45,38 @@
 
     <script>
         function checkName() {
-            // 入力された名前を取得
             const name = document.getElementById("nameInput").value;
             const resultDiv = document.getElementById("result");
 
-            // 未入力の場合の処理
             if (name === "") {
                 resultDiv.textContent = "名前を入力してください";
                 resultDiv.className = "";
                 return;
             }
 
-            // 1. 全角半角統一(NFKC) ＋ 英字を小文字化 ＋ 余計なスペース(空白)を削除
-            let normalizedName = name.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
+            // 半角カタカナを全角に、全角英字を半角にし、大文字を小文字化して、空白をすべて消す
+            // これにより「ﾕﾏﾝ」は「ユマン」として扱われます
+            const normalizedName = name.normalize("NFKC").toLowerCase().replace(/[\s　]+/g, "");
 
-            // 2. カタカナ(半角カタカナもNFKCで全角になっている)を、すべて「ひらがな」に変換
-            // これにより「いトウ」「ｲﾄｳ」はすべて「いとう」に、「ユマん」は「ゆまん」になります
-            normalizedName = normalizedName.replace(/[\u30a1-\u30f6]/g, function(match) {
-                return String.fromCharCode(match.charCodeAt(0) - 0x60);
-            });
+            // 網羅するキーワードのリスト
+            const targetWords = [
+                "yuman", "yuuman", "yuhman", // ローマ字ゆまん
+                "ito", "itou", "itoh",       // ローマ字いとう
+                "いとう", "イトウ",            // いとう系
+                "ゆまん", "ユマン",            // ゆまん系
+                "ゆーまん", "ユーマン",        // ゆーまん系
+                "伊藤"                       // 漢字
+            ];
 
-            // 3. 徹底的に統一された文字列でキーワード判定
-            if (normalizedName.includes("yuman") || 
-                normalizedName.includes("yuuman") || // ローマ字 (ユーマン)
-                normalizedName.includes("ito") ||    // ローマ字 (ito, itou, itohすべてに反応します)
-                normalizedName.includes("いとう") ||   // ひらがな (イトウ、ｲﾄｳ、いトウもこれに反応します)
-                normalizedName.includes("ゆまん") ||   // ひらがな (ユマン、ﾕﾏﾝ、ゆマんもこれに反応します)
-                normalizedName.includes("ゆーまん") || // ひらがな長音
-                normalizedName.includes("伊藤")) {
-                
+            // normalizedNameの中に、targetWordsのどれか1つでも含まれているか判定
+            const isMatch = targetWords.some(word => normalizedName.includes(word));
+
+            if (isMatch) {
                 resultDiv.textContent = "ロリコン";
                 resultDiv.className = "lolicon";
-                
             } else {
-                
                 resultDiv.textContent = "ゲイ";
                 resultDiv.className = "gay";
-                
             }
         }
     </script>
