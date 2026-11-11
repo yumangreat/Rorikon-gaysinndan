@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- キャッシュを強制的に無効化するメタタグを追加 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>名前判定ツール (キャッシュ対策版)</title>
+    <title>名前判定ツール</title>
     <style>
         body {
             font-family: sans-serif;
@@ -59,14 +58,40 @@
             }
 
             let cleanName = name.toLowerCase();
+            // スペースや記号は消すが、「と」「&」「+」などセット接続に使う文字は残す
             cleanName = cleanName.replace(/[\s　\u200B-\u200D\uFEFFー〜~\-＿_.,!?！？・]/g, "");
 
-            // ﾕﾏｿ (半角ゆまそ) も確実に捕まえるパターン
-            const yumanPattern = /[yｙゆユゅュﾕ][uｕうウぅゥｳ]?[mｍまマﾏ][aａあアぁァｧ]?[nｎんンソﾝｿ]/;
-            const itoPattern = /[iｉいイぃィ1lｌｲ][tｔとト卜ﾄ][oｏuｕ0うウぅゥおオぉォｳｵ]?h?/;
-            const kanjiPattern = /(伊|イ尹|ｲ尹|亻尹)藤/;
+            // 1. コアとなる名前のパターン（視覚トリック偽装を含む）
+            const yumanCore = /[yｙゆユゅュﾕ][uｕうウぅゥｳ]?[mｍまマﾏ][aａあアぁァｧ]?[nｎんンソﾝｿ]/.source;
+            const itoCore = /([iｉいイぃィ1lｌｲ][tｔとト卜ﾄ][oｏuｕ0うウぅゥおオぉォｳｵ]?h?|(伊|イ尹|ｲ尹|亻尹)藤)/.source;
+            const shinCore = /(s[hｈ]?i[nｎんンソﾝｿ]|しん|シン|シソ|心)/.source;
 
-            if (yumanPattern.test(cleanName) || itoPattern.test(cleanName) || kanjiPattern.test(cleanName)) {
+            // 2. 他人ではないと判定できる敬称・罵倒リスト（考えうる限りすべて）
+            // これ以外の文字（太郎、ひろし等）がくっついていると全体一致に失敗してゲイになります
+            const suffixes = /(さん|サン|san|くん|クン|kun|君|様|さま|サマ|sama|ちゃん|チャン|chan|先輩|センパイ|先生|センセイ|たん|タン|氏|殿|どの|ドノ|bot|野郎|やろう|ヤロウ|め|メ|っち|ッチ|マン|まん|man)?/.source;
+
+            // 3. ターゲットの組み合わせ
+            // yuman系統 ＋ 敬称
+            const yumanTarget = `(${yumanCore}${suffixes})`;
+            // 伊藤 ＋ 心(省略可) ＋ 敬称
+            const itoTarget = `(${itoCore}(${shinCore})?${suffixes})`;
+            
+            // ターゲット単体の正規表現
+            const targetName = `(${yumanTarget}|${itoTarget})`;
+
+            // 4. 自分を表す代名詞と、接続詞（僕と〜、〜&俺 など）
+            const pronouns = /(僕|ぼく|ボク|俺|おれ|オレ|私|わたし|ワタシ|自分|じぶん|ジブン|ワイ|わい|うち|ウチ)/.source;
+            const connectors = /(と|&|＆|＋|\+|x|×)?/.source; // 「僕伊藤」のように接続詞なしでも反応するよう ? を付与
+
+            // 5. 【最強の完全一致チェック】
+            // 先頭(^)から末尾($)まで、以下のどれかに「完璧に」一致しなければならない
+            // パターンA: ターゲット単体 （例: 伊藤心、伊藤野郎、yuman様）
+            // パターンB: 自分 ＋ 接続詞 ＋ ターゲット （例: 僕と伊藤心くん）
+            // パターンC: ターゲット ＋ 接続詞 ＋ 自分 （例: yuman＆俺）
+            const finalRegex = new RegExp(`^(${targetName}|${pronouns}${connectors}${targetName}|${targetName}${connectors}${pronouns})$`);
+
+            // 判定実行
+            if (finalRegex.test(cleanName)) {
                 resultDiv.textContent = "ロリコン";
                 resultDiv.className = "lolicon";
             } else {
