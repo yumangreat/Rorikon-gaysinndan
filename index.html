@@ -3,46 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 強力なキャッシュ無効化対策 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>名前判定ツール</title>
+    <title>真の性癖を暴くシステム</title>
     <style>
         body {
-            font-family: sans-serif;
+            background-color: #0a0a0a;
+            color: #00ff00; /* サイバーな緑色 */
+            font-family: 'Courier New', Courier, monospace, sans-serif;
             text-align: center;
-            margin-top: 100px;
+            margin-top: 80px;
+        }
+        h2 {
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px #00ff00;
         }
         input {
-            padding: 10px;
+            padding: 12px;
             font-size: 16px;
-            width: 250px;
-            margin-bottom: 10px;
+            width: 350px;
+            margin-bottom: 15px;
+            background-color: #1a1a1a;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus {
+            box-shadow: 0 0 15px #00ff00;
+            background-color: #222;
         }
         button {
-            padding: 10px 20px;
+            padding: 10px 30px;
             font-size: 16px;
+            background-color: #00ff00;
+            color: #000;
+            border: none;
+            font-weight: bold;
             cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover {
+            background-color: #ffffff;
+            box-shadow: 0 0 15px #ffffff;
         }
         #result {
-            margin-top: 30px;
-            font-size: 36px;
+            margin-top: 40px;
+            font-size: 45px;
             font-weight: bold;
+            letter-spacing: 5px;
         }
         .lolicon {
-            color: #e74c3c;
+            color: #ff3333;
+            text-shadow: 0 0 15px #ff0000;
         }
         .gay {
-            color: #3498db;
+            color: #3388ff;
+            text-shadow: 0 0 15px #0044ff;
+        }
+        .error {
+            color: #ffff00;
+            font-size: 20px;
         }
     </style>
 </head>
 <body>
 
-    <h2>名前判定ツール</h2>
-    <input type="text" id="nameInput" placeholder="名前を入力してください">
+    <h2>真の性癖を暴くシステム</h2>
+    <input type="text" id="nameInput" placeholder="ターゲットの呼称を入力せよ（※単語のみ有効）">
     <br>
-    <button onclick="checkName()">判定</button>
+    <button onclick="checkName()">解析実行</button>
 
     <div id="result"></div>
 
@@ -51,46 +84,50 @@
             const name = document.getElementById("nameInput").value;
             const resultDiv = document.getElementById("result");
 
-            if (name === "") {
-                resultDiv.textContent = "名前を入力してください";
-                resultDiv.className = "";
+            if (name.trim() === "") {
+                resultDiv.textContent = "対象者が指定されていません。";
+                resultDiv.className = "error";
                 return;
             }
 
-            let cleanName = name.toLowerCase();
-            // スペースや記号は消すが、「と」「&」「+」などセット接続に使う文字は残す
-            cleanName = cleanName.replace(/[\s　\u200B-\u200D\uFEFFー〜~\-＿_.,!?！？・]/g, "");
+            // 【第一形態: Zalgo(装飾文字)の破壊 ＆ 小文字化】
+            // 文字に付与された特殊な点々(ダイアクリティカルマーク)を分解し、強制消去
+            let cleanName = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").normalize("NFKC").toLowerCase();
 
-            // 1. コアとなる名前のパターン（視覚トリック偽装を含む）
+            // 【第二形態: 偽装文字（Leet表記）のあぶり出しと修復】
+            cleanName = cleanName.replace(/r\s*n/g, "m");   // yurnan(rn偽装) -> yuman
+            cleanName = cleanName.replace(/[@4]/g, "a");    // yum@n -> yuman
+            cleanName = cleanName.replace(/[¥\\]/g, "y");   // ¥uman -> yuman
+            cleanName = cleanName.replace(/[μv]/g, "u");    // yvman -> yuman
+            cleanName = cleanName.replace(/0/g, "o");       // 1t0u -> 1tou
+
+            // 【第三形態: ノイズの完全消去】
+            // 空白、改行(コピー時の\n)、長音符、見えない制御文字、記号をすべて「無」にする
+            cleanName = cleanName.replace(/[\s\u200B-\u200D\uFEFF\u202A-\u202E\u2066-\u2069ー〜~\-＿_.,!?！？・]/g, "");
+
+            // 【第四形態: ターゲットパターンの生成】
+            // ※「Itou」すり抜け問題は、[o u お う 等] の母音が『1回以上(+)』連続しても良い設定に変更して解決済み
             const yumanCore = /[yｙゆユゅュﾕ][uｕうウぅゥｳ]?[mｍまマﾏ][aａあアぁァｧ]?[nｎんンソﾝｿ]/.source;
-            const itoCore = /([iｉいイぃィ1lｌｲ][tｔとト卜ﾄ][oｏuｕ0うウぅゥおオぉォｳｵ]?h?|(伊|イ尹|ｲ尹|亻尹)藤)/.source;
+            const itoCore = /([iｉいイぃィ1lｌｲ][tｔとト卜ﾄ][oｏuｕ0うウぅゥおオぉォｳｵ]+h?|(伊|イ尹|ｲ尹|亻尹)藤)/.source;
             const shinCore = /(s[hｈ]?i[nｎんンソﾝｿ]|しん|シン|シソ|心)/.source;
-
-            // 2. 他人ではないと判定できる敬称・罵倒リスト（考えうる限りすべて）
-            // これ以外の文字（太郎、ひろし等）がくっついていると全体一致に失敗してゲイになります
-            const suffixes = /(さん|サン|san|くん|クン|kun|君|様|さま|サマ|sama|ちゃん|チャン|chan|先輩|センパイ|先生|センセイ|たん|タン|氏|殿|どの|ドノ|bot|野郎|やろう|ヤロウ|め|メ|っち|ッチ|マン|まん|man)?/.source;
-
-            // 3. ターゲットの組み合わせ
-            // yuman系統 ＋ 敬称
-            const yumanTarget = `(${yumanCore}${suffixes})`;
-            // 伊藤 ＋ 心(省略可) ＋ 敬称
-            const itoTarget = `(${itoCore}(${shinCore})?${suffixes})`;
             
-            // ターゲット単体の正規表現
+            // 敬称リスト (※第一形態の処理で濁点が消える対策として、「どの」だけでなく「との」も登録)
+            const suffixes = /(さん|サン|san|くん|クン|kun|君|様|さま|サマ|sama|ちゃん|チャン|chan|先輩|センパイ|先生|センセイ|たん|タン|氏|殿|どの|との|ドノ|トノ|bot|野郎|やろう|ヤロウ|め|メ|っち|ッチ|マン|まん|man)?/.source;
+
+            // ターゲット単体の組み立て
+            const yumanTarget = `(${yumanCore}${suffixes})`;
+            const itoTarget = `(${itoCore}(${shinCore})?${suffixes})`;
             const targetName = `(${yumanTarget}|${itoTarget})`;
 
-            // 4. 自分を表す代名詞と、接続詞（僕と〜、〜&俺 など）
-            const pronouns = /(僕|ぼく|ボク|俺|おれ|オレ|私|わたし|ワタシ|自分|じぶん|ジブン|ワイ|わい|うち|ウチ)/.source;
-            const connectors = /(と|&|＆|＋|\+|x|×)?/.source; // 「僕伊藤」のように接続詞なしでも反応するよう ? を付与
+            // 接続詞と代名詞リスト (濁点消失対策済み)
+            const pronouns = /(僕|ぼく|ほく|ボク|ホク|俺|おれ|オレ|私|わたし|ワタシ|自分|じぶん|しふん|ジブン|シフン|ワイ|わい|うち|ウチ)/.source;
+            const connectors = /(と|&|＆|＋|\+|x|×)?/.source;
 
-            // 5. 【最強の完全一致チェック】
-            // 先頭(^)から末尾($)まで、以下のどれかに「完璧に」一致しなければならない
-            // パターンA: ターゲット単体 （例: 伊藤心、伊藤野郎、yuman様）
-            // パターンB: 自分 ＋ 接続詞 ＋ ターゲット （例: 僕と伊藤心くん）
-            // パターンC: ターゲット ＋ 接続詞 ＋ 自分 （例: yuman＆俺）
+            // 【最終防衛ライン: 完全一致ルール (A案)】
+            // ターゲット単体、または「自分＋ターゲット」、または「ターゲット＋自分」のみ許可
             const finalRegex = new RegExp(`^(${targetName}|${pronouns}${connectors}${targetName}|${targetName}${connectors}${pronouns})$`);
 
-            // 判定実行
+            // 判決を下す
             if (finalRegex.test(cleanName)) {
                 resultDiv.textContent = "ロリコン";
                 resultDiv.className = "lolicon";
